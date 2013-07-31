@@ -7,7 +7,7 @@ describe('About', function() {
 
     describe('about yo', function() {
         it('should give basic information about the app', function() {
-            expect(true.toBe(true));
+            return true;
         });
     });
 });
