@@ -83,6 +83,12 @@ module.exports = function (grunt) {
                     base: 'htdocs',
                     keepalive: true
                 }
+            },
+            test: {
+                options: {
+                    base: 'htdocs',
+                    keepalive: false
+                }
             }
         },
 
@@ -108,6 +114,12 @@ module.exports = function (grunt) {
             beforeconcat: configJshintModules,
             afterconcat: ['tmp/campuskit.partial.js'],
             gruntfile: ['Gruntfile.js']
+        },
+
+        karma: {
+            e2e: {
+                configFile: 'karma.conf.js'
+            }
         },
 
         rsync: {
@@ -188,10 +200,12 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-rsync');
 
     grunt.registerTask('js', ['jshint:beforeconcat', 'concat:partial', 'jshint:afterconcat', 'uglify:*', 'concat:full']);
     grunt.registerTask('default', ['jshint:gruntfile', 'clean', 'bower:install', 'js', 'cssmin:minify', 'copy']);
     grunt.registerTask('server', ['connect:server']);
     grunt.registerTask('build', ['default']);
+    grunt.registerTask('test:e2e', ['connect:test', 'karma:e2e'])
 };
