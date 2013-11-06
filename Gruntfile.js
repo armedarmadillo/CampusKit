@@ -86,7 +86,7 @@ module.exports = function (grunt) {
             },
             test: {
                 options: {
-                    base: 'htdocs',
+                    base: 'dist',
                     keepalive: false
                 }
             }
