@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" manifest="junk">
 <head>
     <meta charset="utf-8">
-    <title>UCSF Mobile</title>
+    <title>UCSF</title>
     <link rel="stylesheet" type="text/css" href="css/main.css" media="screen">
     <!--[if lte IE 7]>
     <link rel="stylesheet" type="text/css" href="css/ie.css" media="screen">
@@ -12,6 +12,7 @@
     <link rel="stylesheet" type="text/css" href="css/shuttle.css" media="screen">
     <link rel="stylesheet" type="text/css" href="css/directory.css" media="screen">
     <link rel="stylesheet" type="text/css" href="css/maps.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="css/research.css" media="screen">
 
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
     <link rel="apple-touch-icon-precomposed" sizes="144x144" href="apple-touch-icon-144x144-precomposed.png">
@@ -24,9 +25,10 @@
     <img style="display:none" alt="" src="img/background-decor.png">
     <img style="display:none" alt="" src="img/watermark.png">
 
-    <div data-ng-app="main">
+    <!-- id="ng-app" needed for IE8 support, according to http://docs.angularjs.org/guide/ie -->
+    <div id="ng-app" data-ng-app="main">
         <header class="main-header" data-ng-cloak>
-            <div class="logo"></div><span>Mobile</span>
+            <div class="logo"></div>
         </header>
         <div data-ng-view data-ng-animate="{enter: 'transition-in'}">
         </div>
@@ -35,8 +37,8 @@
                 <a href="#/about">About</a> | <a href="#/feedback">Feedback</a>
             </p>
         </footer>
-        <div data-ng-cloak data-ng-controller="backButtonController">
-            <button data-ng-hide="hideBackButton"
+        <div data-ng-cloak data-ng-controller="navigationController">
+            <button data-ng-hide="hideNavigation"
             data-ng-animate="{show: 'transition-in'}"
             onclick="window.history.go(-1);"
             class="nav-button">Back</button>
@@ -59,5 +61,6 @@
     <script src="js/modules/emergency.js"></script>
     <script src="js/modules/about.js"></script>
     <script src="js/modules/feedback.js"></script>
+    <script src="js/modules/research.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-/*global module:false*/
+/* global module: false */
 module.exports = function (grunt) {
     'use strict';
 
@@ -16,36 +16,29 @@ module.exports = function (grunt) {
     if (platformOption === 'phonegap') {
         dest = 'phonegap/www';
     } else {
-        dest = 'htdocs';
+        dest = 'dist';
     }
 
     var configCopyMainFiles = [
         {expand: true, dot: true, cwd: site + '/html', src: ['**'], dest: dest},
-        {expand: true, cwd: site, src: ['appcache/**'], dest: dest},
         {expand: true, cwd: site, src: ['font/**'], dest: dest},
-        {expand: true, cwd: site, src: ['img/**'], dest: dest}
+        {expand: true, cwd: site, src: ['img/**'], dest: dest},
+        {expand: true, flatten: true, ext: '.js', cwd: site, src: ['js/modules/**/*.min.js'], dest: dest+'/js/modules'}
     ];
 
     var configCleanAllSrc = [dest + '/*', 'tmp/*', 'bower_components/*', 'lib/*'];
 
     if (platformOption === 'phonegap') {
         configCopyMainFiles.unshift(
-            {expand: true, cwd: 'phonegap/campuskit_templates/' + siteOption + '/www', src: '**', dest: dest},
-            {expand: true, cwd: 'phonegap/campuskit_templates/' + siteOption + '/plugins', src: '**', dest: dest + '/../plugins'}
+            {expand: true, cwd: 'phonegap/campuskit_templates/' + siteOption + '/www', src: '**', dest: dest}
         );
         configCleanAllSrc.push('phonegap/platforms/*', '!phonegap/platforms/.gitignore');
         configCleanAllSrc.push('phonegap/plugins/*', '!phonegap/plugins/.gitignore');
     }
 
-    var configJshintModules = [site + '/js/modules/*/*.src.js'];
-    if (platformOption === 'phonegap') {
-        configJshintModules.push(site + '/js/phonegap/modules/*/*.src.js');
-    }
-
-    var configUglifyModules = ['**/*.js'];
-    if (platformOption === 'phonegap') {
-        configUglifyModules.push(['../phonegap/modules/**/*.js']);
-    }
+    var configInlineAngularTemplatesDistFiles = platformOption === 'web' ?
+        {'dist/index.html': [site + '/angular_templates/*/*.html']} :
+        {'phonegap/www/index.html': [site + '/angular_templates/*/*.html']};
 
     // Project configuration.
     grunt.initConfig({
@@ -80,8 +73,15 @@ module.exports = function (grunt) {
         connect: {
             server: {
                 options: {
-                    base: 'htdocs',
-                    keepalive: true
+                    base: 'dist',
+                    hostname: 'localhost',
+                    port: 8000,
+                    middleware: function (connect) {
+                        return [
+                            require('connect-livereload')(),
+                            connect.static('dist')
+                        ];
+                    }
                 }
             },
             test: {
@@ -107,13 +107,73 @@ module.exports = function (grunt) {
             }
         },
 
+        inline_angular_templates: {
+            dist: {
+                options: {
+                    base: site + '/angular_templates',
+                    selector: '#ng-app'
+                },
+                files: configInlineAngularTemplatesDistFiles
+            }
+        },
+
         jshint: {
             options: {
-                jshintrc: '.jshintrc'
+                curly: true,
+                eqeqeq: true,
+                immed: true,
+                latedef: true,
+                newcap: true,
+                noarg: true,
+                sub: true,
+                undef: true,
+                boss: true,
+                eqnull: true,
+                globals: {
+                    'angular': true,
+                    'FastClick': true,
+                    'google': false,
+                    'Hogan': false,
+                    'Modernizr': false,
+                    'UCSF': false
+                }
             },
-            beforeconcat: configJshintModules,
-            afterconcat: ['tmp/campuskit.partial.js'],
-            gruntfile: ['Gruntfile.js']
+            beforeconcat: {
+                options: {
+                    browser: true
+                },
+                src: [site + '/js/modules/*/*.src.js']
+            },
+            afterconcat: {
+                options: {
+                    browser: true
+                },
+                src: ['tmp/campuskit.partial.js']
+            },
+            gruntfile: {
+                options: {
+                    es5: true,
+                    globals: {
+                        'module': false,
+                        'require': false
+                    }
+                },
+                src: ['Gruntfile.js']
+            }
+        },
+
+        open: {
+            server: {
+                url: 'http://localhost:8000'
+            }
+        },
+
+        release: {
+            options: {
+                file: 'bower.json',
+                npm: false,
+                tagName: 'v<%= version %>'
+            }
         },
 
         karma: {
@@ -124,7 +184,7 @@ module.exports = function (grunt) {
 
         rsync: {
             'deploy-staging': {
-                src: 'htdocs/',
+                src: 'dist/',
                 dest: '/var/www/html',
                 host: 'm-stage',
                 recursive: true,
@@ -132,13 +192,40 @@ module.exports = function (grunt) {
                 args: ['--links']
             },
             'deploy-live': {
-                src: 'htdocs/',
+                src: 'dist/',
                 dest: '/var/www/html',
                 host: 'm',
                 recursive: true,
                 syncDest: true,
                 args: ['--links']
             }
+        },
+
+        sass: {
+            dist: {
+                files: [
+                    {
+                        cwd: site + '/scss',
+                        dest: site + '/css',
+                        expand: true,
+                        ext: '.css',
+                        src: ['[a-zA-Z]**.scss']
+                    }
+                ],
+                options: {
+                    includePaths: [
+                        site + '/scss'
+                    ]
+                },
+            }
+        },
+
+        smoosher: {
+            default_options: {
+                files: {
+                    'dist/index.html': 'dist/index.html',
+                },
+            },
         },
 
         uglify: {
@@ -149,7 +236,7 @@ module.exports = function (grunt) {
             },
             fastclick: {
                 files: {
-                    'tmp/fastclick.min.js': ['lib/fastclick/lib/fastclick.js']
+                    'tmp/fastclick.min.js': ['lib/fastclick/fastclick.js']
                 }
             },
             campuskit: {
@@ -162,7 +249,7 @@ module.exports = function (grunt) {
                     {
                         expand: true,
                         cwd: site + '/js/modules/',
-                        src: configUglifyModules,
+                        src: ['**/*.js', '!**/*.min.js'],
                         dest: dest + '/js/modules/',
                         ext: '.js',
                         flatten: true
@@ -178,15 +265,25 @@ module.exports = function (grunt) {
             },
             js: {
                 files: [site + '/js/**/*.js'],
-                tasks: ['js']
+                tasks: ['js', 'copy', 'inline_angular_templates', 'smoosher']
+            },
+            scss: {
+                files: [site + '/scss/**.scss'],
+                tasks: ['sass:dist']
             },
             css: {
                 files: [site + '/css/**'],
                 tasks: ['cssmin:minify']
             },
             html: {
-                files: [ site + '/html/**', site + '/img/**', site + '/font/**', site + '/appcache/**'],
-                tasks: ['copy']
+                files: [ site + '/html/**', site + '/img/**', site + '/font/**', site + '/angular_templates/**'],
+                tasks: ['copy', 'inline_angular_templates', 'smoosher']
+            },
+            livereload: {
+                options: {
+                    livereload: true
+                },
+                files: ['dist/**']
             }
         }
     });
@@ -200,12 +297,19 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-conventional-changelog');
+    grunt.loadNpmTasks('grunt-html-smoosher');
     grunt.loadNpmTasks('grunt-karma');
+    grunt.loadNpmTasks('grunt-inline-angular-templates');
+    grunt.loadNpmTasks('grunt-open');
+    grunt.loadNpmTasks('grunt-release');
     grunt.loadNpmTasks('grunt-rsync');
+    grunt.loadNpmTasks('grunt-sass');
 
     grunt.registerTask('js', ['jshint:beforeconcat', 'concat:partial', 'jshint:afterconcat', 'uglify:*', 'concat:full']);
-    grunt.registerTask('default', ['jshint:gruntfile', 'clean', 'bower:install', 'js', 'cssmin:minify', 'copy']);
-    grunt.registerTask('server', ['connect:server']);
+    grunt.registerTask('default', ['jshint:gruntfile', 'clean', 'bower:install', 'js', 'sass:dist', 'cssmin:minify', 'copy', 'inline_angular_templates', 'smoosher']);
+    grunt.registerTask('server', ['connect:server:keepalive']);
     grunt.registerTask('build', ['default']);
-    grunt.registerTask('test:e2e', ['connect:test', 'karma:e2e'])
+    grunt.registerTask('test:e2e', ['connect:test', 'karma:e2e']);
+    grunt.registerTask('run', ['connect:server', 'open', 'watch']);
 };

@@ -1,20 +1,30 @@
 (function () {
     'use strict';
-    var apikey = 'c631ef46e918c82cf81ef4869f0029d4';
     angular.module('fitness', [])
     .config(['$routeProvider', function ($routeProvider) {
         $routeProvider
-        .when('/fitness/schedule', {templateUrl: 'partials/fitness/schedule.html', controller: 'scheduleFitnessController'})
-        .when('/fitness/locations', {templateUrl: 'partials/fitness/locations.html'})
-        .when('/fitness', {templateUrl: 'partials/fitness/mainMenu.html'});
+        .when('/fitness/schedule', {templateUrl: 'fitness/schedule.html', controller: 'scheduleFitnessController'})
+        .when('/fitness/locations', {templateUrl: 'fitness/locations.html'})
+        .when('/fitness', {templateUrl: 'fitness/mainMenu.html'});
     }])
+    .factory('FitnessService', function () {
+        return {
+            schedule: function (options, successCallback, failureCallback) {
+                if (window.UCSF && window.UCSF.Fitness && typeof window.UCSF.Fitness.schedule === 'function') {
+                    window.UCSF.Fitness.schedule(
+                        {},
+                        successCallback,
+                        failureCallback
+                    );
+                } else {
+                    failureCallback();
+                }
+            }
+        };
+    })
     .controller(
         'scheduleFitnessController',
-        ['$scope', function ($scope) {
-            $scope.loading = true;
-            $scope.loadError = false;
-            $scope.loaded = false;
-
+        ['$scope', 'FitnessService', function ($scope, FitnessService) {
             $scope.query = '';
             $scope.filter = function (elem) {
                 switch ($scope.filter.type) {
@@ -34,33 +44,29 @@
             };
             $scope.filter.type = 'all';
 
-            var options = {
-                apikey: apikey
+            var successCallback = function (data) {
+                $scope.$apply(function () {
+                    $scope.loading = false;
+                    $scope.loadError = !! data.error;
+                    $scope.loaded = ! $scope.loadError;
+
+                    $scope.classes = data.classes;
+                });
             };
 
-            if (window.UCSF && window.UCSF.Fitness && typeof window.UCSF.Fitness.schedule === 'function') {
-                window.UCSF.Fitness.schedule(
-                    options,
-                    function (data) {
-                        $scope.$apply(function () {
-                            $scope.loading = false;
-                            $scope.loadError = !! data.error;
-                            $scope.loaded = ! $scope.loadError;
-
-                            $scope.classes = data.classes;
-                        });
-                    },
-                    function () {
-                        $scope.$apply(function () {
-                            $scope.loading = false;
-                            $scope.loadError = true;
-                        });
-                    }
-                );
-            } else {
+            var failureCallback = function () {
                 $scope.loading = false;
                 $scope.loadError = true;
-            }
+            };
+
+            $scope.load = function() {
+                $scope.loading = true;
+                $scope.loadError = false;
+                $scope.loaded = false;
+                FitnessService.schedule({}, successCallback, failureCallback);
+            };
+
+            $scope.load();
         }]
     );
 }());

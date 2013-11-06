@@ -2,11 +2,12 @@
 <widget xmlns     = "http://www.w3.org/ns/widgets"
         xmlns:gap = "http://phonegap.com/ns/1.0"
         id        = "edu.ucsf.UCSFMobile"
-        version   = "2.2.0">
-    <name>UCSF_Mobile</name>
+        version   = "2.2.3"
+        versionCode = "941">
+    <name>UCSF</name>
 
     <description>
-        UCSF Mobile
+        University of California, San Francisco
     </description>
 
     <author href="http://github.com/Trott/CampusKit" email="rtrott@gmail.com">
@@ -20,6 +21,8 @@
     <preference name="fullscreen"       value="false" />
     <preference name="prerendered-icon" value="true" />
     <preference name="show-splash-screen-spinner" value="false" />
+
+    <access origin="*" />
 
     <icon src="icon.png" />
     <icon src="res/icon/android/icon-36-ldpi.png"   gap:platform="android"    gap:density="ldpi" />
