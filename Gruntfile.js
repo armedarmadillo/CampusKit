@@ -84,12 +84,12 @@ module.exports = function (grunt) {
                     }
                 }
             },
-            test: {
-                options: {
-                    base: 'dist',
-                    keepalive: false
-                }
-            }
+            // test: {
+            //     options: {
+            //         base: 'dist',
+            //         keepalive: false
+            //     }
+            // }
         },
 
         copy : {
@@ -310,6 +310,6 @@ module.exports = function (grunt) {
     grunt.registerTask('default', ['jshint:gruntfile', 'clean', 'bower:install', 'js', 'sass:dist', 'cssmin:minify', 'copy', 'inline_angular_templates', 'smoosher']);
     grunt.registerTask('server', ['connect:server:keepalive']);
     grunt.registerTask('build', ['default']);
-    grunt.registerTask('test:e2e', ['connect:test', 'karma:e2e']);
+    grunt.registerTask('test:e2e', ['karma:e2e']);
     grunt.registerTask('run', ['connect:server', 'open', 'watch']);
 };
